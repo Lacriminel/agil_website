@@ -1,0 +1,88 @@
+<!-- Topbar -->
+<div class="agil-topbar">
+  <div class="agil-logo">
+    <img src="logo.jpg" alt="AGIL" style="height:28px;object-fit:contain;border-radius:4px" />
+    AGIL LogiReserv
+    <span class="agil-logo-sub">Espace Client</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;position:relative">
+    <button
+      (click)="openSwitchPanel()"
+      style="font-size:11px;padding:4px 12px;border-radius:20px;background:transparent;color:rgba(255,255,255,.75);border:0.5px solid rgba(255,255,255,.3);cursor:pointer"
+    >
+      Espace Admin
+    </button>
+    <span style="font-size:11px;padding:4px 12px;border-radius:20px;background:#fff;color:#0f0f94;font-weight:700;border:0.5px solid rgba(255,255,255,.3)">
+      Espace Client
+    </span>
+
+    @if (showSwitchPanel) {
+      <div (click)="showSwitchPanel=false" style="position:fixed;inset:0;z-index:299"></div>
+      <div style="position:absolute;top:38px;right:0;background:#fff;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:264px;padding:16px;z-index:300;border:0.5px solid #e5e7eb" (click)="$event.stopPropagation()">
+        <div style="font-size:12px;font-weight:700;color:#0f0f94;margin-bottom:12px">Connexion — Espace Admin</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input type="email" [(ngModel)]="switchEmail" placeholder="Adresse e-mail"
+            style="width:100%;border:1px solid #e5e7eb;border-radius:6px;padding:7px 10px;font-size:12px;outline:none;color:#111"
+            (focus)="$any($event.target).style.borderColor='#0f0f94'"
+            (blur)="$any($event.target).style.borderColor='#e5e7eb'" />
+          <input type="password" [(ngModel)]="switchPassword" placeholder="Mot de passe"
+            style="width:100%;border:1px solid #e5e7eb;border-radius:6px;padding:7px 10px;font-size:12px;outline:none;color:#111"
+            (focus)="$any($event.target).style.borderColor='#0f0f94'"
+            (blur)="$any($event.target).style.borderColor='#e5e7eb'"
+            (keyup.enter)="doSwitch()" />
+          @if (switchError) {
+            <div style="font-size:10px;color:#A32D2D;background:#FCEBEB;border-radius:5px;padding:5px 8px">! {{ switchError }}</div>
+          }
+          <div style="display:flex;gap:6px">
+            <button (click)="doSwitch()" [disabled]="switchLoading || !switchEmail || !switchPassword"
+              style="flex:1;background:#0f0f94;color:#fff;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:600;cursor:pointer"
+              [style.opacity]="switchLoading || !switchEmail || !switchPassword ? '0.5' : '1'">
+              {{ switchLoading ? 'Connexion…' : 'Se connecter' }}
+            </button>
+            <button (click)="showSwitchPanel=false" style="flex:1;background:#f3f4f6;border:none;border-radius:6px;padding:8px;font-size:12px;cursor:pointer;color:#374151">
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <button (click)="logout()" style="font-size:10px;color:rgba(255,255,255,.5);background:none;border:none;cursor:pointer;margin-left:4px">
+      Déconnecter
+    </button>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<div class="agil-sidebar">
+  <div class="agil-nav-section">Client</div>
+  @for (link of navLinks; track link.path) {
+    <a [routerLink]="link.path" routerLinkActive="active" class="agil-nav-item">
+      <span>{{ link.icon }}</span>
+      {{ link.label }}
+    </a>
+  }
+  <div class="agil-nav-section" style="margin-top:6px">Mon compte</div>
+  @if (customerInfo) {
+    <div class="agil-nav-item" style="cursor:default;pointer-events:none;font-size:11px">
+      • {{ customerInfo.place }}
+    </div>
+    <div class="agil-nav-item" style="cursor:default;pointer-events:none;font-size:11px">
+      • {{ customerInfo.group }}
+    </div>
+  }
+</div>
+
+<!-- Main -->
+<div class="agil-main">
+  <div class="agil-page-header">
+    <div class="agil-page-title">{{ pageTitle }}</div>
+    <div style="font-size:10px;color:#6b7280;display:flex;align-items:center;gap:5px">
+      <span style="width:7px;height:7px;border-radius:50%;background:#1D9E75;display:inline-block"></span>
+      Disponibilités en temps réel
+    </div>
+  </div>
+  <div class="agil-page-body">
+    <router-outlet />
+  </div>
+</div>

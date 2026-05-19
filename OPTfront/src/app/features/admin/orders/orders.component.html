@@ -1,0 +1,112 @@
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+  <div class="agil-kpi">
+    <div class="agil-kpi-val" style="color:#BA7517">{{ countByStatus('PENDING') }}</div>
+    <div class="agil-kpi-label">En attente de validation</div>
+    <div class="agil-kpi-delta text-yellow">Compartiments bloqués</div>
+  </div>
+  <div class="agil-kpi">
+    <div class="agil-kpi-val" style="color:#378ADD">{{ countByStatus('CONFIRMED') }}</div>
+    <div class="agil-kpi-label">Confirmées</div>
+    <div class="agil-kpi-delta" style="color:#6b7280">En cours de livraison</div>
+  </div>
+  <div class="agil-kpi">
+    <div class="agil-kpi-val" style="color:#1D9E75">{{ countByStatus('DELIVERED') }}</div>
+    <div class="agil-kpi-label">Livrées</div>
+    <div class="agil-kpi-delta text-green">Conformes</div>
+  </div>
+</div>
+
+<div class="agil-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="agil-card-title" style="margin-bottom:0">
+      Commandes <span class="agil-card-sub">{{ orders.length }} au total</span>
+    </div>
+    <div style="display:flex;gap:6px">
+      @for (s of ['','PENDING','CONFIRMED','DELIVERED']; track s) {
+        <button
+          class="agil-btn"
+          [class]="filterStatus === s ? 'agil-btn-primary' : 'agil-btn-outline'"
+          style="padding:4px 10px;font-size:10px"
+          (click)="filterStatus = s; load()"
+        >
+          {{ s === '' ? 'Tous' : s === 'PENDING' ? 'En attente' : s === 'CONFIRMED' ? 'Confirmées' : 'Livrées' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Detail panel -->
+  @if (selected) {
+    <div style="background:var(--agil-blue-bg);border:0.5px solid var(--agil-blue);border-radius:8px;padding:12px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:600;color:#0f0f94">Commande #{{ selected.id }}</span>
+        <button (click)="selected=null" style="background:none;border:none;cursor:pointer;color:#9ca3af">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px;color:#6b7280;margin-bottom:10px">
+        <span>Client : <strong style="color:#0f0f94">{{ selected.customer?.fullName }}</strong></span>
+        <span>Statut : <span [class]="'pill ' + statusPillClass(selected.status)">{{ statusLabel(selected.status) }}</span></span>
+        <span>Total : <strong style="color:#0f0f94">{{ selected.totalQuantity }} unités</strong></span>
+        <span>Date : <strong style="color:#0f0f94">{{ selected.createdAt | date:'short' }}</strong></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+        @for (item of selected.items; track item.id) {
+          <div style="display:flex;align-items:center;justify-content:space-between;background:#fff;border-radius:5px;padding:6px 10px;font-size:11px">
+            <span style="color:#0f0f94;font-weight:500">Compartiment #{{ item.compartmentId }} · Pos {{ item.compartment?.position }}</span>
+            <span class="pill pill-blue">{{ item.gasType }}</span>
+            <span style="font-weight:600;color:#0f0f94">{{ item.quantity }} u</span>
+          </div>
+        }
+      </div>
+      <div style="display:flex;gap:8px">
+        @if (selected.status === 'PENDING') {
+          <button class="agil-btn agil-btn-primary" style="flex:1" (click)="confirm(selected.id)"> Confirmer la livraison</button>
+        }
+        @if (selected.status === 'CONFIRMED') {
+          <button class="agil-btn" style="flex:1;background:#1D9E75;color:#fff;border:none" (click)="deliver(selected.id)"> Marquer comme livrée</button>
+        }
+        <button class="agil-btn agil-btn-outline" style="flex:1" (click)="selected=null">Fermer</button>
+      </div>
+    </div>
+  }
+
+  <table class="agil-table">
+    <thead>
+      <tr>
+        <th>Réf.</th>
+        <th>Client / Zone</th>
+        <th>Quantité</th>
+        <th>Date</th>
+        <th>Statut</th>
+        <th style="text-align:right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (o of orders; track o.id) {
+        <tr style="cursor:pointer" (click)="selected = o">
+          <td class="text-mono text-primary">#{{ o.id }}</td>
+          <td>
+            <div style="font-weight:500">{{ o.customer?.fullName }}</div>
+            <div style="font-size:10px;color:#9ca3af">{{ o.customer?.place?.name }}</div>
+          </td>
+          <td style="font-weight:600;color:#0f0f94">{{ o.totalQuantity }} u</td>
+          <td style="color:#9ca3af;font-size:10px">{{ o.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+          <td><span [class]="'pill ' + statusPillClass(o.status)">{{ statusLabel(o.status) }}</span></td>
+          <td style="text-align:right" (click)="$event.stopPropagation()">
+            @if (o.status === 'PENDING') {
+              <button class="agil-btn agil-btn-primary" style="padding:3px 10px;font-size:10px" (click)="confirm(o.id)">Confirmer</button>
+            }
+            @if (o.status === 'CONFIRMED') {
+              <button class="agil-btn" style="padding:3px 10px;font-size:10px;background:#1D9E75;color:#fff;border:none" (click)="deliver(o.id)">Livrer</button>
+            }
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:24px;font-size:12px">Aucune commande</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+
+
+

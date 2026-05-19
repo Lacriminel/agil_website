@@ -1,0 +1,166 @@
+<!-- Legend + filters -->
+<div class="agil-card" style="margin-bottom:10px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="agil-card-title" style="margin-bottom:0">Filtres <span class="agil-card-sub">Disponibilités en temps réel</span></div>
+    <div class="agil-legend">
+      <div class="agil-leg"><div class="agil-ld" style="background:#1D9E75"></div>Libre</div>
+      <div class="agil-leg"><div class="agil-ld" style="background:#378ADD"></div>Réservé</div>
+      <div class="agil-leg"><div class="agil-ld" style="background:#639922"></div>Confirmé</div>
+      <div class="agil-leg"><div class="agil-ld" style="background:#0f0f94"></div>Sélectionné</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+    <div>
+      <label class="agil-label">Type de carburant</label>
+      <select class="agil-select">
+        <option>GASOIL</option>
+        <option>GASOIL SSP</option>
+        <option>GASOIL SSF</option>
+      </select>
+    </div>
+    <div>
+      <label class="agil-label">Zone</label>
+      <select class="agil-select" [(ngModel)]="selectedZone">
+        <option value="">Toutes les zones</option>
+        @for (z of availableZones; track z) {
+          <option [value]="z">{{ z }}</option>
+        }
+      </select>
+    </div>
+    <div>
+      <label class="agil-label">Date</label>
+      <input type="date" class="agil-input" [value]="today" />
+    </div>
+  </div>
+</div>
+
+<!-- Gas picker modal -->
+@if (pickingFor) {
+  <div class="agil-modal-overlay">
+    <div class="agil-modal">
+      <div class="agil-modal-title">
+        Choisir le type de carburant
+        <button (click)="pickingFor=null" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px">✕</button>
+      </div>
+      <div style="font-size:11px;color:#6b7280;margin-bottom:12px;background:#f9fafb;padding:8px;border-radius:6px">
+         {{ pickingFor.truck.name }} · Compartiment C{{ pickingFor.compartment.position }} · <strong>{{ pickingFor.compartment.capacity }} m³</strong>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+        @for (g of gasTypes; track g) {
+          <label style="display:flex;align-items:center;gap:10px;border:0.5px solid #e5e7eb;border-radius:6px;padding:9px 12px;cursor:pointer;"
+            [style.border-color]="selectedGasType === g ? '#0f0f94' : '#e5e7eb'"
+            [style.background]="selectedGasType === g ? '#E6F1FB' : '#fff'">
+            <input type="radio" name="gasType" [value]="g" [(ngModel)]="selectedGasType" style="accent-color:#0f0f94" />
+            <div>
+              <div style="font-size:12px;font-weight:500;color:#0f0f94">{{ g }}</div>
+              <div style="font-size:10px;color:#6b7280">{{ gasLabel(g) }}</div>
+            </div>
+          </label>
+        }
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="agil-btn agil-btn-primary" style="flex:1" (click)="addToCart()">
+          Ajouter au panier
+        </button>
+        <button class="agil-btn agil-btn-outline" style="flex:1" (click)="pickingFor=null">Annuler</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (success) {
+  <div style="background:var(--agil-green-bg);border:0.5px solid #1D9E75;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--agil-green-text);font-weight:500">
+     Réservation envoyée au bureau de commande ! Redirection vers vos réservations…
+  </div>
+}
+
+<div style="display:flex;gap:12px;align-items:flex-start">
+  <!-- Truck list -->
+  <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+    @for (truck of filteredTrucks; track truck.id) {
+      <div style="border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 12px;background:#fff">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div>
+            <span style="font-size:13px;font-weight:600;color:#0f0f94"> {{ truck.name }}</span>
+            <span style="font-size:10px;color:#6b7280;margin-left:8px">{{ truck.governorateGroup?.name }} · {{ truck.totalCapacity }} m³ total</span>
+          </div>
+          <span class="pill pill-green">DISPONIBLE</span>
+        </div>
+
+        <!-- Compartment grid -->
+        <div class="comp-grid">
+          @for (comp of truck.compartments; track comp.id) {
+            <div
+              class="comp-box"
+              [class]="isInCart(comp.id) ? 'comp-sel' : comp.isAvailable ? 'comp-libre' : 'comp-res'"
+              (click)="comp.isAvailable && !isInCart(comp.id) ? openPicker(comp, truck) : null"
+              [style.cursor]="comp.isAvailable && !isInCart(comp.id) ? 'pointer' : 'default'"
+            >
+              <div class="comp-label">C{{ comp.position }} {{ isInCart(comp.id) ? 'Sélect.' : comp.isAvailable ? 'Libre' : 'Réservé' }}</div>
+              <div class="comp-vol">{{ comp.capacity }}m³{{ !comp.isAvailable && comp.gasType ? ' · ' + comp.gasType : '' }}</div>
+            </div>
+          } @empty {
+            <span style="font-size:11px;color:#9ca3af">Aucun compartiment</span>
+          }
+        </div>
+
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-top:6px">
+          <span>{{ truck.compartments?.length }} compartiment(s) disponible(s)</span>
+          <span style="color:#0f0f94;font-weight:500">{{ truck.compartments?.reduce(sumCap, 0) }} m³ disponibles</span>
+        </div>
+      </div>
+    } @empty {
+      <div style="background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:40px;text-align:center;color:#9ca3af;font-size:12px">
+        Aucun camion disponible dans votre zone de gouvernorat.
+      </div>
+    }
+  </div>
+
+  <!-- Cart sidebar -->
+  <div style="width:220px;flex-shrink:0">
+    <div style="background:#fff;border:0.5px solid #e5e7eb;border-radius:8px;padding:12px;position:sticky;top:90px">
+      <div style="font-size:12px;font-weight:600;color:#0f0f94;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid #e5e7eb">
+         Panier · <span style="color:#6b7280;font-weight:400">{{ cart.length }} compartiment(s)</span>
+      </div>
+
+      @if (cart.length === 0) {
+        <p style="font-size:11px;color:#9ca3af;text-align:center;padding:12px 0">Cliquez sur un compartiment pour l'ajouter</p>
+      }
+
+      @for (item of cart; track item.compartment.id) {
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;padding-bottom:8px;border-bottom:0.5px solid #f3f4f6">
+          <div>
+            <div style="font-size:11px;font-weight:500;color:#0f0f94">{{ item.truck.name }} · C{{ item.compartment.position }}</div>
+            <div style="font-size:10px;color:#6b7280">{{ item.compartment.capacity }} m³</div>
+            <div style="font-size:9px;font-weight:600;color:var(--agil-green-text);margin-top:1px">{{ item.gasType }}</div>
+          </div>
+          <button (click)="removeFromCart(item.compartment.id)" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:14px;padding:0">✕</button>
+        </div>
+      }
+
+      @if (cart.length > 0) {
+        <div style="margin-top:8px;padding-top:8px;border-top:0.5px solid #e5e7eb">
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#0f0f94;margin-bottom:12px">
+            <span>Total</span><span>{{ totalUnits }} m³</span>
+          </div>
+          @if (error) {
+            <p style="font-size:10px;color:var(--agil-red-text);margin-bottom:8px">{{ error }}</p>
+          }
+          <button
+            class="agil-btn agil-btn-primary"
+            style="width:100%;padding:8px;font-size:12px"
+            [disabled]="submitting"
+            (click)="submit()"
+          >
+             {{ submitting ? 'Envoi…' : 'Confirmer la réservation' }}
+          </button>
+          <div style="font-size:9px;color:#9ca3af;text-align:center;margin-top:6px">{{ cart.length }} compart. · {{ totalUnits }} m³</div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+
+
+
+

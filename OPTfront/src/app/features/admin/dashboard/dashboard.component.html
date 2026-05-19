@@ -1,0 +1,117 @@
+@if (loading) {
+  <div style="display:flex;align-items:center;justify-content:center;padding:60px;color:#9ca3af;font-size:13px;gap:10px">
+    <div style="width:18px;height:18px;border:2px solid #e5e7eb;border-top-color:#0f0f94;border-radius:50%;animation:spin .7s linear infinite"></div>
+    Chargement…
+  </div>
+}
+@if (!loading) {
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">
+  <div class="agil-kpi">
+    <div class="agil-kpi-val text-primary">{{ trucks.length }}<span style="font-size:12px">/10</span></div>
+    <div class="agil-kpi-label">Camions actifs</div>
+    <div class="agil-kpi-delta" style="color:#6b7280">Max. 10 autorisés</div>
+  </div>
+  <div class="agil-kpi">
+    <div class="agil-kpi-val" style="color:#1D9E75">{{ availableTrucks }}</div>
+    <div class="agil-kpi-label">Camions disponibles</div>
+    <div class="agil-kpi-delta text-green">Prêts à la livraison</div>
+  </div>
+  <div class="agil-kpi">
+    <div class="agil-kpi-val" style="color:#BA7517">{{ pendingOrders }}</div>
+    <div class="agil-kpi-label">Commandes en attente</div>
+    <div class="agil-kpi-delta text-yellow" [style.color]="pendingOrders > 0 ? 'var(--agil-yellow)' : 'var(--agil-green)'">
+      {{ pendingOrders > 0 ? 'Nécessite validation' : 'Aucune en attente' }}
+    </div>
+  </div>
+  <div class="agil-kpi">
+    <div class="agil-kpi-val" style="color:#0f0f94">{{ customers.length }}</div>
+    <div class="agil-kpi-label">Clients enregistrés</div>
+    <div class="agil-kpi-delta" style="color:#6b7280">SNDP AGIL Tunisie</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+  <!-- Top trucks -->
+  <div class="agil-card">
+    <div class="agil-card-title">Camions actifs <span class="agil-card-sub">Statut en temps réel</span></div>
+    @for (truck of trucks.slice(0,5); track truck.id) {
+      <div class="agil-bar-wrap">
+        <div class="agil-bar-top">
+          <span style="font-weight:500">{{ truck.name }}</span>
+          <span [class]="truckStatusClass(truck.status)" class="pill">{{ truckStatusLabel(truck.status) }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:2px">
+          <span>{{ truck.governorateGroup?.name }}</span>
+          <span style="font-weight:500;color:#0f0f94">{{ truck.totalCapacity }} unités · {{ truck.compartments?.length }} compart.</span>
+        </div>
+        <div class="agil-bar">
+          <div class="agil-bar-fill" [style.width]="availPct(truck)+'%'" [style.background]="truck.status === 'AVAILABLE' ? '#1D9E75' : truck.status === 'IN_TRANSIT' ? '#378ADD' : '#E24B4A'"></div>
+        </div>
+      </div>
+    } @empty {
+      <p style="font-size:11px;color:#9ca3af;text-align:center;padding:16px">Aucun camion enregistré</p>
+    }
+    <a routerLink="/admin/trucks" style="font-size:10px;color:var(--agil-primary);text-decoration:none;display:block;text-align:right;margin-top:6px">Gérer les camions →</a>
+  </div>
+
+  <!-- Recent orders -->
+  <div class="agil-card">
+    <div class="agil-card-title">Commandes récentes <span class="agil-card-sub">Dernières activités</span></div>
+    @for (o of orders.slice(0,6); track o.id) {
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #e5e7eb;font-size:11px">
+        <span class="text-mono text-primary" style="font-size:10px">#{{ o.id }}</span>
+        <span style="color:#6b7280;flex:1;margin:0 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ o.customer?.fullName }}</span>
+        <span style="color:#6b7280;font-size:10px;margin-right:6px">{{ o.totalQuantity }} u</span>
+        <span [class]="'pill ' + statusPillClass(o.status)">{{ statusLabel(o.status) }}</span>
+      </div>
+    } @empty {
+      <p style="font-size:11px;color:#9ca3af;text-align:center;padding:16px">Aucune commande</p>
+    }
+    <a routerLink="/admin/orders" style="font-size:10px;color:var(--agil-primary);text-decoration:none;display:block;text-align:right;margin-top:6px">Voir toutes les commandes →</a>
+  </div>
+</div>
+
+<!-- Alerts -->
+<div class="agil-card">
+  <div class="agil-card-title">Alertes système <span class="agil-card-sub">Données en temps réel</span></div>
+  @if (maintenanceTrucks.length > 0) {
+    <div class="agil-alert">
+      <div class="agil-alert-icon agil-alert-red">!</div>
+      <div>
+        <div class="agil-alert-title">{{ maintenanceTrucks.length }} camion(s) en maintenance</div>
+        <div class="agil-alert-sub">{{ maintenanceTrucks.map(t => t.name).join(', ') }} — compartiments masqués aux clients</div>
+      </div>
+    </div>
+  }
+  @if (pendingOrders > 0) {
+    <div class="agil-alert">
+      <div class="agil-alert-icon agil-alert-yellow"></div>
+      <div>
+        <div class="agil-alert-title">{{ pendingOrders }} commande(s) en attente de validation</div>
+        <div class="agil-alert-sub">Des compartiments sont bloqués jusqu'à confirmation ou refus</div>
+      </div>
+    </div>
+  }
+  @if (trucks.length >= 9) {
+    <div class="agil-alert">
+      <div class="agil-alert-icon agil-alert-yellow"></div>
+      <div>
+        <div class="agil-alert-title">Limite de camions atteinte ({{ trucks.length }}/10)</div>
+        <div class="agil-alert-sub">Vous approchez du maximum autorisé par le système</div>
+      </div>
+    </div>
+  }
+  @if (maintenanceTrucks.length === 0 && pendingOrders === 0 && trucks.length < 9) {
+    <div class="agil-alert">
+      <div class="agil-alert-icon agil-alert-green"></div>
+      <div>
+        <div class="agil-alert-title">Système opérationnel — Aucune alerte</div>
+        <div class="agil-alert-sub">Toutes les livraisons sont en cours normalement</div>
+      </div>
+    </div>
+  }
+</div>
+} <!-- end @if (!loading) -->
+
+
+

@@ -1,0 +1,64 @@
+<div class="p-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">Sites</h1>
+    <button (click)="openCreate()" class="bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800">+ Ajouter un site</button>
+  </div>
+  @if (showForm) {
+    <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+        <h2 class="text-lg font-semibold mb-4">{{ editId ? 'Modifier' : 'Ajouter' }} un site</h2>
+        <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
+          <input formControlName="name" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Nom du site" />
+          <select formControlName="governorateId" class="w-full border rounded-lg px-3 py-2 text-sm">
+            <option [ngValue]="null">Sélectionner un gouvernorat</option>
+            @for (g of governorates; track g.id) {
+              <option [ngValue]="g.id">{{ g.name }}</option>
+            }
+          </select>
+          @if (error) { <p class="text-red-500 text-sm">{{ error }}</p> }
+          <div class="flex gap-3">
+            <button type="submit" [disabled]="form.invalid" class="flex-1 bg-blue-700 text-white rounded-lg py-2 text-sm disabled:opacity-50">Enregistrer</button>
+            <button type="button" (click)="showForm=false" class="flex-1 border rounded-lg py-2 text-sm">Annuler</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+        <tr>
+          <th class="px-6 py-3 text-left">Nom</th>
+          <th class="px-6 py-3 text-left">Gouvernorat</th>
+          <th class="px-6 py-3 text-left">Statut</th>
+          <th class="px-6 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (p of places; track p.id) {
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-3 font-medium text-gray-800">{{ p.name }}</td>
+            <td class="px-6 py-3 text-gray-500">{{ p.governorate?.name }}</td>
+            <td class="px-6 py-3">
+              @if (p.customerId) {
+                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Assigné</span>
+              } @else {
+                <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Libre</span>
+              }
+            </td>
+            <td class="px-6 py-3 text-right space-x-2">
+              <button (click)="openEdit(p)" class="text-blue-600 hover:underline text-xs">Modifier</button>
+              <button (click)="delete(p.id)" class="text-red-500 hover:underline text-xs">Supprimer</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">Aucun site enregistré</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+

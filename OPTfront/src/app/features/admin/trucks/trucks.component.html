@@ -1,0 +1,113 @@
+@if (loading) {
+  <div class="agil-spinner"><div class="agil-spinner-dot"></div> Chargement…</div>
+}
+@if (!loading) {
+<div class="agil-card">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="agil-card-title" style="margin-bottom:0">
+      Camions <span class="agil-card-sub">{{ trucks.length }}/10 enregistrés</span>
+    </div>
+    <button class="agil-btn agil-btn-primary" (click)="openCreate()">+ Ajouter un camion</button>
+  </div>
+
+  @if (showForm) {
+    <div class="agil-modal-overlay">
+      <div class="agil-modal">
+        <div class="agil-modal-title">
+          {{ editId ? 'Modifier' : 'Nouveau' }} camion
+          <button (click)="showForm=false" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px">✕</button>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="save()" style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label class="agil-label">Nom du camion</label>
+            <input formControlName="name" class="agil-input" placeholder="ex: CAM-201" />
+          </div>
+          <div>
+            <label class="agil-label">Groupe de gouvernorat</label>
+            <select formControlName="governorateGroupId" class="agil-select">
+              <option [ngValue]="null">Sélectionner un groupe</option>
+              @for (g of groups; track g.id) {
+                <option [ngValue]="g.id">{{ g.name }}</option>
+              }
+            </select>
+          </div>
+          @if (!editId) {
+            <div>
+              <label class="agil-label">Combinaison de compartiments</label>
+              <select formControlName="comboKey" class="agil-select">
+                <option value="A">Combo A — [7, 7, 5, 4, 6, 3] = 32 m³ (6 compart.)</option>
+                <option value="B">Combo B — [6, 6, 6, 5, 5, 4] = 32 m³ (6 compart.)</option>
+                <option value="C">Combo C — [7, 6, 4, 4, 3, 2, 5] = 31 m³ (7 compart.)</option>
+                <option value="D">Combo D — [7, 7, 5, 4, 4, 3, 2] = 32 m³ (7 compart.)</option>
+                <option value="E">Combo E — [7, 7, 6, 4, 3, 3, 2] = 32 m³ (7 compart.)</option>
+              </select>
+            </div>
+          }
+          @if (editId) {
+            <div>
+              <label class="agil-label">Statut</label>
+              <select formControlName="status" class="agil-select">
+                <option value="AVAILABLE">Disponible</option>
+                <option value="IN_TRANSIT">En transit</option>
+                <option value="MAINTENANCE">Maintenance</option>
+              </select>
+            </div>
+          }
+          @if (error) { <p style="font-size:11px;color:var(--agil-red-text)">{{ error }}</p> }
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button type="submit" [disabled]="form.invalid" class="agil-btn agil-btn-primary" style="flex:1">Enregistrer</button>
+            <button type="button" (click)="showForm=false" class="agil-btn agil-btn-outline" style="flex:1">Annuler</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <table class="agil-table">
+    <thead>
+      <tr>
+        <th>Camion</th>
+        <th>Zone & Gouvernorats</th>
+        <th>Statut</th>
+        <th>Compartiments</th>
+        <th>Capacité</th>
+        <th style="text-align:right">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (truck of trucks; track truck.id) {
+        <tr>
+          <td style="font-weight:600;color:#0f0f94">{{ truck.name }}</td>
+          <td>
+            <div style="font-size:11px;font-weight:600;color:#0f0f94">{{ truck.governorateGroup?.name }}</div>
+            <div style="font-size:10px;color:#9ca3af;margin-top:2px;max-width:220px;white-space:normal;line-height:1.4">
+              {{ (truck.governorateGroup?.governorates ?? []).map(g => g.name).join(', ') }}
+            </div>
+          </td>
+          <td><span [class]="'pill ' + statusClass(truck.status)">{{ statusLabel(truck.status) }}</span></td>
+          <td>
+            <div style="display:flex;gap:3px">
+              @for (c of (truck.compartments ?? []); track c.id) {
+                <div style="background:var(--agil-green-bg);border:0.5px solid #1D9E75;border-radius:3px;padding:2px 4px;font-size:8px;font-weight:600;color:var(--agil-green-text)">
+                  C{{ c.position }}<br>{{ c.capacity }}u
+                </div>
+              }
+            </div>
+          </td>
+          <td style="font-weight:600;color:#0f0f94">{{ truck.totalCapacity }} m³</td>
+          <td style="text-align:right">
+            <button (click)="openEdit(truck)" class="agil-btn agil-btn-outline" style="padding:3px 8px;font-size:10px;margin-right:4px">Modifier</button>
+            <button (click)="delete(truck.id)" class="agil-btn agil-btn-danger" style="padding:3px 8px;font-size:10px">Supprimer</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:24px;font-size:12px">Aucun camion enregistré</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+} <!-- end @if (!loading) -->
+
+
+
+

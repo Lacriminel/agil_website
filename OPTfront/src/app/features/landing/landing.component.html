@@ -1,0 +1,88 @@
+<div style="min-height:100vh;background:#1a1a2e;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+
+  <!-- Logo -->
+  <div style="text-align:center;margin-bottom:40px">
+    <img src="logo.jpg" alt="AGIL" style="height:120px;object-fit:contain;border-radius:12px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto" />
+    <div style="font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px">AGIL LogiReserv</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:6px">Système de gestion de distribution de carburant · SNDP AGIL Tunisie</div>
+  </div>
+
+  <!-- Tab switcher -->
+  <div style="display:flex;gap:4px;background:rgba(255,255,255,.08);border-radius:24px;padding:4px;margin-bottom:24px">
+    <button
+      (click)="selectSpace('admin')"
+      style="font-size:12px;padding:7px 24px;border-radius:20px;cursor:pointer;border:none;transition:all .2s;font-weight:600;"
+      [style.background]="activeSpace === 'admin' ? '#0f0f94' : 'transparent'"
+      [style.color]="activeSpace === 'admin' ? '#1a1a1a' : 'rgba(255,255,255,.55)'"
+    >
+       Espace Admin
+    </button>
+    <button
+      (click)="selectSpace('client')"
+      style="font-size:12px;padding:7px 24px;border-radius:20px;cursor:pointer;border:none;transition:all .2s;font-weight:600;"
+      [style.background]="activeSpace === 'client' ? '#0f0f94' : 'transparent'"
+      [style.color]="activeSpace === 'client' ? '#1a1a1a' : 'rgba(255,255,255,.55)'"
+    >
+       Espace Client
+    </button>
+  </div>
+
+  <!-- Login card -->
+  @if (activeSpace) {
+    <div style="background:#fff;border-radius:16px;width:100%;max-width:380px;padding:28px;box-shadow:0 16px 48px rgba(0,0,0,.4)">
+      <div style="margin-bottom:20px">
+        <div style="font-size:16px;font-weight:700;color:#1a1a1a">
+          {{ activeSpace === 'admin' ? 'Connexion Administrateur' : 'Connexion Client' }}
+        </div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:3px">
+          {{ activeSpace === 'admin' ? 'Accès bureau de commande et gestion' : 'Réservation de compartiments et suivi' }}
+        </div>
+      </div>
+
+      <form (ngSubmit)="login()" style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="display:block;font-size:10px;color:#6b7280;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Adresse e-mail</label>
+          <input type="email" [(ngModel)]="email" name="email"
+            [placeholder]="activeSpace === 'admin' ? 'admin@agil.tn' : 'client@agil.tn'"
+            style="width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;color:#111;transition:border .15s"
+            (focus)="$any($event.target).style.borderColor='#0f0f94'"
+            (blur)="$any($event.target).style.borderColor='#e5e7eb'" />
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;color:#6b7280;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Mot de passe</label>
+          <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••"
+            style="width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:9px 12px;font-size:13px;outline:none;color:#111;transition:border .15s"
+            (focus)="$any($event.target).style.borderColor='#0f0f94'"
+            (blur)="$any($event.target).style.borderColor='#e5e7eb'" />
+        </div>
+        @if (error) {
+          <div style="background:#FCEBEB;color:#A32D2D;border-radius:7px;padding:8px 12px;font-size:11px">! {{ error }}</div>
+        }
+        <button type="submit" [disabled]="loading || !email || !password"
+          style="background:#0f0f94;color:#1a1a1a;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;margin-top:4px"
+          [style.opacity]="loading || !email || !password ? '0.5' : '1'">
+          {{ loading ? 'Connexion en cours…' : 'Se connecter' }}
+        </button>
+      </form>
+
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f3f4f6">
+        <div style="font-size:10px;color:#9ca3af;margin-bottom:6px">Accès rapide :</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          @for (hint of hints; track hint.email) {
+            <button (click)="quickFill(hint.email, hint.password)"
+              style="font-size:10px;background:#fffbe6;border:1px solid #0f0f94;border-radius:5px;padding:4px 9px;cursor:pointer;color:#1a1a1a;font-weight:500">
+              {{ hint.label }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (!activeSpace) {
+    <div style="font-size:11px;color:rgba(255,255,255,.25);text-align:center;margin-top:8px">
+      Sélectionnez un espace pour vous connecter
+    </div>
+  }
+</div>
+

@@ -1,0 +1,55 @@
+<div class="p-8">
+  <h1 class="text-2xl font-bold text-gray-800 mb-6">Bienvenue !</h1>
+
+  @if (profile) {
+    <div class="bg-white rounded-xl shadow p-6 mb-6">
+      <h2 class="font-semibold text-gray-700 mb-3">Votre profil</h2>
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div><span class="text-gray-400">Nom :</span> <span class="font-medium ml-1">{{ profile.customer.fullName }}</span></div>
+        <div><span class="text-gray-400">E-mail :</span> <span class="font-medium ml-1">{{ profile.user.email }}</span></div>
+        <div><span class="text-gray-400">Téléphone :</span> <span class="font-medium ml-1">{{ profile.customer.phone || '—' }}</span></div>
+        <div><span class="text-gray-400">Site :</span> <span class="font-medium ml-1">{{ profile.customer.place?.name }}</span></div>
+        <div><span class="text-gray-400">Gouvernorat :</span> <span class="font-medium ml-1">{{ profile.customer.place?.governorate?.name }}</span></div>
+        <div><span class="text-gray-400">Groupe :</span> <span class="font-medium ml-1">{{ profile.customer.place?.governorate?.governorateGroup?.name }}</span></div>
+      </div>
+    </div>
+  }
+
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="font-semibold text-gray-700">Commandes récentes</h2>
+    <a routerLink="/customer/browse" class="bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-800">+ Nouvelle commande</a>
+  </div>
+
+  <div class="bg-white rounded-xl shadow overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+        <tr>
+          <th class="px-6 py-3 text-left">#</th>
+          <th class="px-6 py-3 text-left">Statut</th>
+          <th class="px-6 py-3 text-left">Total</th>
+          <th class="px-6 py-3 text-left">Date</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (o of orders.slice(0, 5); track o.id) {
+          <tr>
+            <td class="px-6 py-3 text-gray-400">#{{ o.id }}</td>
+            <td class="px-6 py-3">
+              <span [class]="statusClass(o.status)" class="text-xs font-medium px-2 py-0.5 rounded-full">{{ statusLabel(o.status) }}</span>
+            </td>
+            <td class="px-6 py-3 text-gray-600">{{ o.totalQuantity }} unités</td>
+            <td class="px-6 py-3 text-gray-400">{{ o.createdAt | date:'short' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="4" class="px-6 py-8 text-center text-gray-400">
+            Aucune commande. <a routerLink="/customer/browse" class="text-green-600 underline">Passez votre première commande !</a>
+          </td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+

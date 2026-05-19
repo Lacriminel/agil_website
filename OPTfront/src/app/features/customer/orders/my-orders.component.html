@@ -1,0 +1,66 @@
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+  <div style="font-size:12px;color:#6b7280">{{ orders.length }} réservation(s) au total</div>
+  <a routerLink="/customer/browse" class="agil-btn agil-btn-primary" style="text-decoration:none"> Nouvelle réservation</a>
+</div>
+
+@if (selected) {
+  <div style="background:var(--agil-blue-bg);border:0.5px solid var(--agil-blue);border-radius:8px;padding:12px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:13px;font-weight:600;color:#0f0f94">Bon de réservation — #BL-{{ selected.id }}-AGIL</span>
+      <button (click)="selected=null" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px">✕</button>
+    </div>
+    <div style="background:#fff;border-radius:6px;padding:10px;margin-bottom:10px">
+      <div class="bon-row"><span class="bon-key">N° Bon</span><span class="bon-val text-mono text-primary">#BL-{{ selected.id }}-AGIL</span></div>
+      <div class="bon-row"><span class="bon-key">Statut</span><span class="bon-val"><span [class]="'pill ' + statusPillClass(selected.status)">{{ statusLabel(selected.status) }}</span></span></div>
+      <div class="bon-row"><span class="bon-key">Quantité totale</span><span class="bon-val">{{ selected.totalQuantity }} m³</span></div>
+      <div class="bon-row"><span class="bon-key">Date</span><span class="bon-val">{{ selected.createdAt | date:'dd/MM/yyyy HH:mm' }}</span></div>
+      @for (item of selected.items; track item.id) {
+        <div class="bon-row">
+          <span class="bon-key">{{ item.compartment?.truck?.name }} · C{{ item.compartment?.position }}</span>
+          <span class="bon-val" style="color:var(--agil-green-text)">{{ item.gasType }} · {{ item.quantity }} m³</span>
+        </div>
+      }
+    </div>
+    <div style="display:flex;gap:8px">
+      @if (selected.status === 'PENDING') {
+        <button class="agil-btn agil-btn-danger" style="flex:1" (click)="cancel(selected.id)">Annuler la réservation</button>
+      }
+      <button class="agil-btn agil-btn-outline" style="flex:1" (click)="selected=null">Fermer</button>
+    </div>
+  </div>
+}
+
+<div class="agil-card">
+  <table class="agil-table">
+    <thead>
+      <tr>
+        <th>Réf.</th>
+        <th>Camion(s)</th>
+        <th>Quantité</th>
+        <th>Date</th>
+        <th>Statut</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (o of orders; track o.id) {
+        <tr (click)="selected = o" style="cursor:pointer">
+          <td class="text-mono text-primary">#{{ o.id }}</td>
+          <td style="color:#6b7280;font-size:10px">
+            {{ o.items?.length }} compartiment(s)
+          </td>
+          <td style="font-weight:600;color:#0f0f94">{{ o.totalQuantity }} m³</td>
+          <td style="color:#9ca3af;font-size:10px">{{ o.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+          <td><span [class]="'pill ' + statusPillClass(o.status)">{{ statusLabel(o.status) }}</span></td>
+        </tr>
+      } @empty {
+        <tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:24px;font-size:12px">
+          Aucune réservation · <a routerLink="/customer/browse" style="color:var(--agil-primary)">Réserver des compartiments</a>
+        </td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+
+
+
