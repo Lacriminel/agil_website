@@ -1,7 +1,7 @@
 ﻿import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
-const BASE = 'http://localhost:3000';
+const BASE = 'https://agil-backend-leq8.onrender.com';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
