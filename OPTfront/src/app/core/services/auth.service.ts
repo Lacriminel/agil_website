@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { AuthUser, LoginResponse } from '../models';
 
-const API = 'http://localhost:3000';
+const API = 'https://agil-backend-leq8.onrender.com';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
